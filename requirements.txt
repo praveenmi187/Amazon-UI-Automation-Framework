@@ -2,3 +2,4 @@ selenium==4.46.0
 pytest==9.1.1
 pytest-html==4.1.1
 webdriver-manager==4.0.2
+python-dotenv==1.0.0

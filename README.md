@@ -188,14 +188,39 @@ Credentials are now sourced from environment variables for better security.
 
 ### Configuration
 
-In `config.py`, credentials use `os.environ.get()` with safe fallbacks:
+In `config.py`, the framework optionally loads a local `.env` file (via python-dotenv) for developer convenience, then reads credentials from environment variables. This keeps secrets out of source control while allowing local development with a `.env` file you do not commit.
 
 ```python
-email_id = os.environ.get('AMAZON_EMAIL', 'lmpravee+usca2@amazon.com')
-password_id = os.environ.get('AMAZON_PASSWORD', 'testing')
+# Optional: loads .env (if python-dotenv is installed) then reads env vars
+from dotenv import load_dotenv
+load_dotenv()
+
+email_id = os.environ.get('AMAZON_EMAIL')
+password_id = os.environ.get('AMAZON_PASSWORD')
+
+# Config will raise if credentials are missing to avoid silent failures in CI
 ```
 
-### Setting Environment Variables
+### Using a local .env file (optional)
+
+1. Copy the example file:
+
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` and add your credentials (do NOT commit this file):
+
+```text
+AMAZON_EMAIL=your-email@example.com
+AMAZON_PASSWORD=your-secure-password
+```
+
+3. Run tests normally. The config loader will pick up variables from `.env` if present.
+
+### Setting Environment Variables directly
+
+If you prefer not to use `.env`, set environment variables in your shell or CI:
 
 **Linux/Mac:**
 ```bash
