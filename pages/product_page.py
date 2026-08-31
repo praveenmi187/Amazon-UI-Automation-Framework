@@ -16,7 +16,7 @@ class ProductPage(BasePage):
     GO_TO_CART = (By.XPATH, "//a[contains(@href,'cart')]")
 
     def select_product(self):
-        print("current url:", self.driver.current_url)
+        logger.info(f"Current URL: {self.driver.current_url}")
 
         def action():
             products = self.wait.until(
@@ -48,7 +48,7 @@ class ProductPage(BasePage):
     # ---------- Function: Add to Cart ----------
     def add_to_cart(self):
 
-        print("Current URL:", self.driver.current_url)
+        logger.info(f"Current URL: {self.driver.current_url}")
 
         try:
             add_button = self.wait.until(
@@ -62,14 +62,14 @@ class ProductPage(BasePage):
             logger.info("Product added to cart")
 
         except Exception as e:
-            print("Add to Cart failed:", str(e))
+            logger.error(f"Add to Cart failed: {str(e)}")
             raise
         return CartPage(self.driver)
 
     #------------ADD TO YOUR ORDER------------------
     def add_to_your_order(self):
 
-        print("Handling 'Add to your order' popup if present...")
+        logger.info("Handling 'Add to your order' popup if present...")
 
         try:
 
@@ -99,7 +99,7 @@ class ProductPage(BasePage):
             cart_btn = self.wait.until(
                 EC.element_to_be_clickable(self.GO_TO_CART))
 
-            self.retry(lambda: self.wait.until(EC.element_to_be_clickable(self.GO_TO_CART)).click)
+            self.retry(lambda: self.wait.until(EC.element_to_be_clickable(self.GO_TO_CART)).click())
             logger.info("Navigated to cart")
 
         except Exception as e:
