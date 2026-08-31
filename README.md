@@ -32,7 +32,9 @@ The framework has been designed with modularity and scalability in mind, making 
 | Python 3.x              | Programming Language |
 | Selenium WebDriver      | Browser Automation   |
 | PyTest                  | Test Framework       |
+| pytest-html             | HTML Report Generation |
 | ChromeDriver            | Browser Driver       |
+| webdriver-manager       | ChromeDriver Management |
 | Page Object Model (POM) | Design Pattern       |
 | Logging                 | Execution Logging    |
 | Explicit Waits          | Synchronization      |
@@ -48,9 +50,11 @@ The project follows the **Page Object Model (POM)** design pattern.
 AmazonAutomationFramework/
 │
 ├── base/
+│   ├── __init__.py
 │   └── base_page.py
 │
 ├── pages/
+│   ├── __init__.py
 │   ├── home_page.py
 │   ├── login_page.py
 │   ├── dashboard_page.py
@@ -59,13 +63,20 @@ AmazonAutomationFramework/
 │   └── cart_page.py
 │
 ├── tests/
-│   └── test_amazon.py
+│   └── test_login.py
 │
-├── config.py
-├── conftest.py
-├── requirements.txt
-├── README.md
-└── Reports/
+├── Reports/
+│   ├── report.html          (Generated HTML test report)
+│   └── screenshots/         (Auto-captured failure screenshots)
+│
+├── config.py                (Configuration - uses environment variables)
+├── conftest.py              (pytest fixtures & screenshot hooks)
+├── pytest.ini               (pytest configuration & test markers)
+├── requirements.txt         (Python dependencies)
+├── run_tests.bat           (Windows test runner script)
+├── run_tests.sh            (Linux/Mac test runner script)
+├── .gitignore              (Excludes Reports and cache from git)
+└── README.md
 ```
 
 Each web page is represented by its own class, keeping locators and page-specific actions separate from test logic.
@@ -150,46 +161,77 @@ Benefits:
 
 ---
 
-## ✅ Safe Click Implementation
+## ✅ HTML Report Generation & Auto Screenshots
 
-The `safe_click()` method improves click reliability by performing multiple validation steps.
+The framework now automatically generates professional HTML reports and captures screenshots on test failures.
 
-Workflow:
+### Features
 
-1. Wait until the element is clickable
-2. Scroll the element into view
-3. Perform a normal Selenium click
-4. Retry if the click fails due to dynamic page behavior
-5. Perform JavaScript Click as a final fallback
+* **Self-contained HTML Report** - Single file includes all test results, logs, and execution times
+* **Auto Screenshot Capture** - Timestamped screenshots on every test failure for quick failure diagnosis
+* **Organized Storage** - Reports and screenshots stored in `Reports/` directory, excluded from version control via `.gitignore`
+* **pytest Hooks** - `pytest_runtest_makereport` hook handles screenshot capture without manual intervention
 
-This approach handles most common Selenium click issues.
+### Usage
 
----
+Screenshots are **automatically captured** on any test failure. No manual action needed.
 
-## ✅ Retry Mechanism
-
-The framework includes a reusable retry mechanism that automatically retries failed actions.
-
-Handled Exceptions:
-
-* `StaleElementReferenceException`
-* `ElementClickInterceptedException`
-
-This significantly improves test stability on dynamic web applications.
+Generated artifacts:
+* `Reports/report.html` - Complete test execution report
+* `Reports/screenshots/` - Failure screenshots with timestamps (e.g., `test_invalid_login_20260831_174200.png`)
 
 ---
 
-## ✅ Intelligent Login Validation
+## ✅ Environment Variable Support
 
-Instead of checking only for successful login, the framework intelligently detects multiple outcomes.
+Credentials are now sourced from environment variables for better security.
 
-Possible login states:
+### Configuration
 
-* Successful Login
-* Invalid Credentials
-* CAPTCHA Challenge
+In `config.py`, credentials use `os.environ.get()` with safe fallbacks:
 
-If CAPTCHA is detected, the framework stops execution and reports the issue, preventing false-positive test results.
+```python
+email_id = os.environ.get('AMAZON_EMAIL', 'lmpravee+usca2@amazon.com')
+password_id = os.environ.get('AMAZON_PASSWORD', 'testing')
+```
+
+### Setting Environment Variables
+
+**Linux/Mac:**
+```bash
+export AMAZON_EMAIL="your-email@amazon.com"
+export AMAZON_PASSWORD="your-password"
+```
+
+**Windows (PowerShell):**
+```powershell
+$env:AMAZON_EMAIL = "your-email@amazon.com"
+$env:AMAZON_PASSWORD = "your-password"
+```
+
+**Windows (Command Prompt):**
+```cmd
+set AMAZON_EMAIL=your-email@amazon.com
+set AMAZON_PASSWORD=your-password
+```
+
+---
+
+## ✅ Test Configuration (pytest.ini)
+
+The `pytest.ini` file defines test markers and logging configuration.
+
+### Test Markers
+
+Organize tests by category:
+
+```bash
+pytest -m login           # Run only login tests
+pytest -m smoke           # Run smoke tests
+pytest -m integration     # Run integration tests
+```
+
+Available markers: `smoke`, `regression`, `login`, `search`, `cart`, `integration`
 
 ---
 
@@ -266,42 +308,80 @@ pip install -r requirements.txt
 
 # ▶️ Running the Tests
 
-Run all tests
+## Quick Start (Recommended)
 
+Use the provided test runner scripts for easy HTML report generation and automatic screenshot capture.
+
+### Windows
 ```bash
-pytest -v
+.\run_tests.bat
 ```
 
-Generate an HTML report
-
+### Linux/Mac
 ```bash
-pytest -v --html=Reports/report.html
+./run_tests.sh
 ```
 
-Run a specific test
+## Manual Test Execution
+
+Run all tests with HTML report:
 
 ```bash
-pytest tests/test_amazon.py -v
+pytest tests/test_login.py -v --html=Reports/report.html --self-contained-html
+```
+
+Run a specific test:
+
+```bash
+pytest tests/test_login.py::test_valid_login -v
+```
+
+Run tests by marker:
+
+```bash
+pytest tests/test_login.py -m login -v                # Login tests only
+pytest tests/test_login.py -m smoke -v                # Smoke tests only
+pytest tests/test_login.py -m integration -v          # Integration tests only
 ```
 
 ---
 
 # 📊 Reports
 
-The framework supports HTML reporting using **pytest-html**.
+The framework automatically generates comprehensive HTML reports and captures screenshots on failures.
 
-Example command:
+### HTML Report Features
+
+* **Test Results** - Pass/fail status with color coding
+* **Execution Time** - Per-test and total execution duration
+* **Console Logs** - Full timestamped logging output
+* **Failure Details** - Tracebacks and error messages
+* **Self-Contained** - Single HTML file, no external dependencies
+
+### Screenshot Capture
+
+Screenshots are **automatically captured** on test failure:
+
+* **File naming** - `{test_name}_{YYYYMMDD}_{HHMMSS}.png`
+* **Storage** - `Reports/screenshots/` directory
+* **Logging** - Path logged to console on capture
+
+### Viewing Reports
+
+After running tests:
+
+1. Open `Reports/report.html` in any web browser
+2. View failure screenshots in `Reports/screenshots/` directory
+
+### Example Report Command
 
 ```bash
-pytest -v --html=Reports/report.html --self-contained-html
+pytest tests/test_login.py -v --html=Reports/report.html --self-contained-html --tb=short
 ```
 
-The generated report contains:
-
-* Test Results
-* Pass / Fail Status
-* Execution Time
-* Detailed Logs
+This generates:
+* `Reports/report.html` - Complete test report
+* `Reports/screenshots/*.png` - Failure screenshots (auto-captured)
 
 ---
 
@@ -315,67 +395,101 @@ Planned improvements include:
 * GitHub Actions Workflow
 * Cross-Browser Testing
 * Parallel Execution using `pytest-xdist`
-* Allure Reporting
-* Screenshot Capture on Test Failure
+* Allure Reporting (alternative to pytest-html)
 * Data-Driven Testing
 * Docker Support
 * Headless Browser Execution
 * Browser Compatibility Matrix
+* Email Report Distribution
+* Slack Integration for Test Results
 
 ---
 
 # 💡 Automation Concepts Implemented
 
 * Page Object Model (POM)
-* Explicit Waits
-* Retry Mechanism
+* Explicit Waits (visibility, clickable, presence)
+* Retry Mechanism (handles StaleElementReferenceException, ElementClickInterceptedException)
+* Safe Click Implementation (wait → scroll → click → retry → JS fallback)
 * JavaScript Executor
 * Exception Handling
 * Reusable Base Class
 * Object-Oriented Programming (OOP)
-* Logging
-* Environment Variables
+* Logging with timestamps
+* Environment Variables for credentials
 * Modular Framework Design
+* Automatic Screenshot Capture on Failures
+* HTML Report Generation
+* pytest Hooks for test lifecycle management
+* Test Markers for test categorization
 
 ---
 
-# 📸 Suggested Repository Screenshots
+# 📸 Test Reports & Screenshots
 
-To make the repository more attractive, consider adding screenshots of:
+The framework generates professional test reports with automatic screenshot capture on failures.
 
-* Project Folder Structure
-* Test Execution in Terminal
-* HTML Report
-* Jenkins Job (if integrated)
-* GitHub Actions Workflow (future enhancement)
+### Report Artifacts
 
-Create a folder named `screenshots/` and reference them like:
+After running tests, check:
 
-```markdown
-![Framework Structure](screenshots/framework.png)
+* `Reports/report.html` - Complete test execution report (open in browser)
+* `Reports/screenshots/` - Failure screenshots with timestamps
 
-![HTML Report](screenshots/report.png)
+### Example Artifacts
 
-![Jenkins](screenshots/jenkins.png)
+```
+Reports/
+├── report.html                           (Auto-generated on each test run)
+├── screenshots/
+│   ├── test_invalid_login_20260831_174200.png
+│   ├── test_product_search_20260831_174205.png
+│   └── test_add_to_cart_20260831_174210.png
+└── .gitkeep                              (Directory tracking)
+```
+
+### CI/CD Integration
+
+Reports are perfect for CI/CD pipelines:
+
+* **Jenkins** - Archive `Reports/` as artifacts
+* **GitHub Actions** - Upload HTML report and screenshots
+* **GitLab CI** - Store reports as job artifacts
+
+Example GitHub Actions:
+
+```yaml
+- name: Archive Test Reports
+  if: always()
+  uses: actions/upload-artifact@v2
+  with:
+    name: test-reports
+    path: Reports/
 ```
 
 ---
 
 # 📦 Required Packages
 
-Example `requirements.txt`
+The framework requires the following packages (all pinned to tested versions):
 
 ```text
-selenium
-pytest
-pytest-html
-webdriver-manager
+selenium==4.46.0           # Web browser automation
+pytest==9.1.1              # Test framework
+pytest-html==4.1.1         # HTML report generation
+webdriver-manager==4.0.2   # ChromeDriver management
 ```
 
-Install with:
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
+```
+
+### Verify Installation
+
+```bash
+python -m pip list | grep -E "(selenium|pytest|webdriver)"
 ```
 
 ---
