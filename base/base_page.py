@@ -1,6 +1,5 @@
 import time
 import logging
-import pytest
 
 from selenium.common import StaleElementReferenceException, ElementClickInterceptedException
 from selenium.webdriver.support.ui import WebDriverWait
@@ -68,3 +67,47 @@ class BasePage:
 #-----------------------------page validation-------------------------------------------
     def page_validation(self,locator):
         self.wait_for_visibility(locator)
+
+
+#-----------------------------Driver wrapper-------------------------------------------
+class Driver(BasePage):
+    """Concrete Selenium driver helper with reusable browser actions."""
+
+    def __init__(self, driver):
+        super().__init__(driver)
+
+    def open(self, url):
+        self.driver.get(url)
+        return self
+
+    def find(self, locator):
+        return self.wait_for_visibility(locator)
+
+    def click(self, locator):
+        self.safe_click(locator)
+        return self
+
+    def type(self, locator, value):
+        element = self.wait_for_visibility(locator)
+        element.clear()
+        element.send_keys(value)
+        return element
+
+    def get_text(self, locator):
+        return self.wait_for_visibility(locator).text
+
+    def is_displayed(self, locator):
+        try:
+            return self.wait_for_visibility(locator).is_displayed()
+        except Exception:
+            return False
+
+    def get_title(self):
+        return self.driver.title
+
+    def quit(self):
+        self.driver.quit()
+
+    def refresh(self):
+        self.driver.refresh()
+        return self

@@ -1,0 +1,22 @@
+# Pytest reports and screenshots
+Reports/report.html
+Reports/screenshots/
+.pytest_cache/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.venv
